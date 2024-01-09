@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JSON to CSV Converter with Prefix/Suffix</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        background-color: #f7f7f7;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+      .form-group {
+        margin-bottom: 15px;
+      }
+      .form-group label {
+        display: block;
+        margin-bottom: 5px;
+      }
+      textarea {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        border-radius: 5px;
+        border: 1px solid #ddd;
+        height: 100px;
+        resize: vertical;
+        box-sizing: border-box;
+      }
+      input[type="file"] {
+        display: block;
+        margin-bottom: 10px;
+      }
+      button {
+        padding: 10px 15px;
+        background-color: #007bff;
+        border: none;
+        border-radius: 5px;
+        color: white;
+        font-size: 16px;
+        cursor: pointer;
+      }
+      button:hover {
+        background-color: #0056b3;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- <h2>JSON to CSV Converter with Prefix/Suffix</h2>
+
+  <input type="file" id="jsonFile" accept=".jsonl,.json" />
+  <textarea id="jsonInput" placeholder="Or paste JSON string here"></textarea>
+  <br />
+  <textarea type="text" id="prefix" placeholder="Enter prefix"></textarea>
+  <textarea type="text" id="suffix" placeholder="Enter suffix"></textarea>
+  <br />
+  <button onclick="convertAndDownload()">Convert and Download CSV</button> -->
+    <div class="container">
+      <h2>JSON to CSV Converter with Prefix/Suffix</h2>
+
+      <div class="form-group">
+        <input type="file" id="jsonFile" accept=".jsonl,.json" />
+        <textarea
+          id="jsonInput"
+          placeholder="Or paste JSON string here"
+        ></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="prefix">Input Prefix:</label>
+        <textarea id="prefix" placeholder="Enter input prefix text">
+Below is an instruction that describes a task. You will got everything you need.Write a response that appropriately completes the request.You need to select the tool in the list of tools and think step by step.
+### Instructions:仿照如下格式，尽你所能回答以下问题
+
+History:
+暂无
+
+Current State: 暂无
+
+Question:</textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="suffix">Input Suffix:</label>
+        <textarea id="suffix" placeholder="Enter input suffix text">
+
+
+
+### Response:</textarea>
+      </div>
+
+      <button onclick="convertAndDownload()">Convert and Download CSV</button>
+    </div>
+    <script>
+      function convertAndDownload() {
+        let jsonData = document.getElementById("jsonInput").value;
+        const prefix = document.getElementById("prefix").value;
+        const suffix = document.getElementById("suffix").value;
+
+        if (!jsonData) {
+          const file = document.getElementById("jsonFile").files[0];
+          if (!file) {
+            alert("Please upload a JSON file or paste JSON data.");
+            return;
+          }
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            jsonData = e.target.result;
+            processJSON(jsonData, prefix, suffix);
+          };
+          reader.readAsText(file);
+        } else {
+          processJSON(jsonData, prefix, suffix);
+        }
+      }
+
+      function processJSON(jsonData, prefix, suffix) {
+        try {
+          let jsonArray = [];
+          if (jsonData.trim().startsWith("[")) {
+            // Parse as a regular JSON array
+            jsonArray = JSON.parse(jsonData);
+          } else {
+            // Assume JSONL: try to parse each line as a separate JSON object
+            const jsonLines = jsonData.trim().split(/\r?\n/);
+            jsonArray = jsonLines.map((line) => JSON.parse(line));
+          }
+          const csvData = jsonToCSV(jsonArray, prefix, suffix);
+          downloadCSV(csvData);
+        } catch (error) {
+          alert("There was an error processing the JSON data.");
+          console.error(error);
+        }
+      }
+
+      function jsonToCSV(jsonArray, prefix, suffix) {
+        const keyToModify = "input"; // The key we're looking for to add prefix/suffix
+        const fields = Object.keys(jsonArray[0]);
+        const csvRows = jsonArray.map((obj) => {
+          fields.forEach((field) => {
+            if (field === keyToModify && obj[field]) {
+              obj[field] = `${prefix}${obj[field]}${suffix}`;
+            }
+          });
+          return fields
+            .map(
+              (field) =>
+                `"${obj[field] ? String(obj[field]).replace(/"/g, '""') : ""}"`
+            )
+            .join(",");
+        });
+        return [fields.join(","), ...csvRows].join("\r\n");
+      }
+
+      function downloadCSV(csvData) {
+        const blob = new Blob([csvData], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "data.csv";
+        link.click();
+        URL.revokeObjectURL(url);
+      }
+    </script>
+  </body>
+</html>
